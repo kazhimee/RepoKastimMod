@@ -4,6 +4,9 @@ release/
 decompiled/
 temp_eis/
 ExtraInventorySlots.zip
+RepoKastımMod.zip
+package/
+Inventory Slots/
 .dotnet/
 .dotnet-tools/
 *.user

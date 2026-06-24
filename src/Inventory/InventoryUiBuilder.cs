@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using Photon.Pun;
 using TMPro;
 using UnityEngine;
 
@@ -23,7 +24,10 @@ internal static class InventoryUiBuilder
         }
 
         var slotCount = Plugin.EffectiveSlotCount;
-        if (slotCount <= Plugin.VanillaSlotCount)
+        var alignment = Plugin.InventoryAlignment?.Value ?? RepoKastimMod.InventoryAlignment.Center;
+        var needsExtraSlots = slotCount > Plugin.VanillaSlotCount;
+        var needsRealignment = alignment != RepoKastimMod.InventoryAlignment.Center;
+        if (!needsExtraSlots && !needsRealignment)
         {
             return;
         }
@@ -46,15 +50,24 @@ internal static class InventoryUiBuilder
             var allChildren = AllChildrenField?.GetValue(inventoryUi) as List<GameObject>;
             var spacing = CalculateSpacing(existingSpots);
             var centerX = CalculateCenterX(existingSpots, template.transform.localPosition.x);
-            var startX = centerX - spacing * (slotCount - 1) * 0.5f;
+            var alignmentOffset = GetAlignmentOffset(alignment);
+            var startX = centerX - spacing * (slotCount - 1) * 0.5f + alignmentOffset;
             var y = template.transform.localPosition.y;
             var z = template.transform.localPosition.z;
 
-            for (var i = 0; i < slotCount; i++)
+            var iterations = Math.Max(slotCount, Plugin.VanillaSlotCount);
+            for (var i = 0; i < iterations; i++)
             {
                 var spot = GetOrCreateSpot(root, template, existingSpots, i);
                 if (spot == null)
                 {
+                    continue;
+                }
+
+                if (i >= slotCount)
+                {
+                    // We only need to reposition existing vanilla slots when alignment forces it;
+                    // never create extras beyond the configured count.
                     continue;
                 }
 
@@ -65,9 +78,15 @@ internal static class InventoryUiBuilder
                 {
                     allChildren.Add(spotObject);
                 }
+
+                if (i >= Plugin.VanillaSlotCount)
+                {
+                    SlotRegistry.Track(spot);
+                }
             }
 
             InventorySlotList.EnsureSlots(Inventory.instance, slotCount);
+            SlotRegistry.EnsureRegistered(Inventory.instance);
         }
         catch (Exception ex)
         {
@@ -100,6 +119,12 @@ internal static class InventoryUiBuilder
 
         var clone = UnityEngine.Object.Instantiate(template.transform, template.transform.parent);
         clone.name = $"Inventory Spot {index + 1}";
+
+        foreach (var photonView in clone.GetComponents<PhotonView>())
+        {
+            UnityEngine.Object.Destroy(photonView);
+        }
+
         var spot = clone.GetComponent<InventorySpot>();
         var templateVisual = template.GetComponentsInChildren<BatteryVisualLogic>(true).FirstOrDefault();
         InventoryBatteryBinding.PrepareFreshClone(spot, templateVisual);
@@ -182,4 +207,15 @@ internal static class InventoryUiBuilder
     }
 
     private static string GetSlotLabel(int index) => index == 9 ? "0" : (index + 1).ToString();
+
+    private static float GetAlignmentOffset(RepoKastimMod.InventoryAlignment alignment)
+    {
+        var magnitude = Plugin.InventoryAlignmentOffset?.Value ?? 350f;
+        return alignment switch
+        {
+            RepoKastimMod.InventoryAlignment.Left => -magnitude,
+            RepoKastimMod.InventoryAlignment.Right => magnitude,
+            _ => 0f
+        };
+    }
 }

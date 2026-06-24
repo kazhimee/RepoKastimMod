@@ -1,12 +1,9 @@
 # Repo Kastim Mod
 
-R.E.P.O. için ekstra envanter slotları ve azaltılmış stamina tüketimi modu.
-
-Güncel R.E.P.O. sürümleri (v0.4.x) ile uyumludur. Eski `MoreInventorySlots` modunun bozulan işlevleri bu modda yeniden yazıldı ve stamina ayarı eklendi.
+R.E.P.O. için ekstra envanter slotları modu. Güncel R.E.P.O. sürümleri (v0.4.x) ile uyumludur.
 
 ## Özellikler
 
-### Envanter Slotları
 - 3 ile 10 arasında yapılandırılabilir slot sayısı (varsayılan: 5)
 - Tam slot UI: ikonlar, numaralar ve pil göstergeleri
 - 4-9 ve 0 tuşları ile ekstra slot kısayolları
@@ -14,20 +11,16 @@ Güncel R.E.P.O. sürümleri (v0.4.x) ile uyumludur. Eski `MoreInventorySlots` m
 - Dolu slota item koyunca otomatik swap
 - Host koruması (multiplayer)
 - Round arası item takibi ve geri yükleme
-
-### Stamina
-- Koşu stamina tüketimini azaltır (varsayılan: %35 daha az)
-- `BepInEx/config/kazhime.repokastimmod.cfg` dosyasından ayarlanabilir
+- Singleplayer ve multiplayer desteği
 
 ## Kurulum
 
 1. [BepInEx](https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/) kurulu olmalı
-2. Mod manager (Gale / r2modman) ile yükleyin **veya**
-3. `plugins/RepoKastimMod/RepoKastimMod.dll` dosyasını BepInEx plugins klasörüne kopyalayın
+2. Zip'i açıp `RepoKastımMod` klasörünü `BepInEx/plugins/` altına kopyalayın
 
 ## Yapılandırma
 
-İlk çalıştırmadan sonra `BepInEx/config/kazhime.repokastimmod.cfg` oluşur.
+`BepInEx/config/kazhime.repokastimmod.cfg`
 
 | Ayar | Varsayılan | Açıklama |
 |------|------------|----------|
@@ -37,13 +30,15 @@ Güncel R.E.P.O. sürümleri (v0.4.x) ile uyumludur. Eski `MoreInventorySlots` m
 | Auto Swap Items | true | Dolu slotta swap yap |
 | Extra Slot Hotkeys | true | 4-9, 0 tuşları |
 | Numpad Hotkeys | true | Numpad tuşları |
-| Sprint Drain Multiplier | 0.65 | 1.0 = vanilla, 0.65 = %35 daha az drain |
+| Alignment | Center | Slot satırının ekrandaki yatay konumu: `Left`, `Center`, `Right` |
+| Alignment Offset | 350 | Sola/sağa kaydırma miktarı (UI birimi, 0–800) |
 
-## Multiplayer Notları
+## Multiplayer
 
-- **Sadece client'ta mod var:** Her oyuncu kendi slot ayarını kullanır
-- **Host'ta mod + Host Protection:** Client'lar host'un slot limitini aşamaz
-- Stamina değişikliği client-side çalışır (her oyuncu kendi ayarını kullanır)
+- **Tüm oyuncularda mod olmalı** — ekstra slotlar her client'ta ayrı kurulur
+- **Host Protection açıksa:** host'un slot sayısı client'lar için üst limit olur
+- Host'ta mod yoksa client'lar ekstra slotları kullanabilir; host koruması devreye girmez
+- **Vanilla Steam Lobby + Photon matchmaking aynen çalışır** — mod hiçbir network kodu eklemez
 
 ## Geliştirme
 
@@ -51,8 +46,6 @@ Güncel R.E.P.O. sürümleri (v0.4.x) ile uyumludur. Eski `MoreInventorySlots` m
 cd src
 dotnet build -c Release
 ```
-
-Çıktı: `release/RepoKastimMod.dll`
 
 ## Lisans
 
