@@ -1,0 +1,11 @@
+bin/
+obj/
+release/
+decompiled/
+temp_eis/
+ExtraInventorySlots.zip
+.dotnet/
+.dotnet-tools/
+*.user
+*.suo
+.vs/
