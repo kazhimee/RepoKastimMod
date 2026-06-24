@@ -1,6 +1,6 @@
 {
     "name": "RepoKastimMod",
-    "version_number": "1.4.2",
+    "version_number": "1.4.3",
     "website_url": "https://github.com/kazhimee/RepoKastimMod",
     "description": "Extra inventory slots (3-10) and a left/center/right alignment toggle for R.E.P.O. Works in singleplayer and multiplayer.",
     "dependencies": [

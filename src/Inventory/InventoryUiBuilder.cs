@@ -81,9 +81,102 @@ internal static class InventoryUiBuilder
 
     private static void ApplyAlignment(InventoryUI inventoryUi, RepoKastimMod.InventoryAlignment alignment)
     {
-        var offset = GetAlignmentOffset(alignment);
-        var target = _vanillaInventoryUiPosition + new Vector3(offset, 0f, 0f);
+        var slotCount = Plugin.EffectiveSlotCount;
+        var horizontalOffset = ComputeHorizontalOffset(inventoryUi, alignment, slotCount);
+        var verticalOffset = Plugin.InventoryVerticalOffset?.Value ?? 0f;
+        var target = _vanillaInventoryUiPosition + new Vector3(horizontalOffset, verticalOffset, 0f);
         SemiUiPositionPatcher.Reposition(inventoryUi, target);
+    }
+
+    /// <summary>
+    /// Compute a canvas-aware shift so the slot row lands near the requested edge regardless
+    /// of resolution. We work in the canvas's local UI units (CanvasScaler handles physical
+    /// pixels), so the result automatically scales with the user's screen.
+    /// </summary>
+    private static float ComputeHorizontalOffset(
+        InventoryUI inventoryUi,
+        RepoKastimMod.InventoryAlignment alignment,
+        int slotCount)
+    {
+        var fine = Plugin.InventoryAlignmentFineOffset?.Value ?? 0f;
+        if (alignment == RepoKastimMod.InventoryAlignment.Center)
+        {
+            return fine;
+        }
+
+        var canvasWidth = TryGetCanvasWidth(inventoryUi, fallback: 1920f);
+        var spacing = TryGetCurrentSpacing(inventoryUi, fallback: 40f);
+
+        // Row spans (slotCount - 1) * spacing between centres; add one slot width on each
+        // side so the leftmost/rightmost slot icons don't get clipped by the screen edge.
+        var rowWidth = (slotCount - 1) * spacing + spacing * 1.5f;
+        var edgeMargin = 30f;
+
+        var maxShift = Mathf.Max(0f, (canvasWidth - rowWidth) * 0.5f - edgeMargin);
+        var strength = Mathf.Clamp01(Plugin.InventoryAlignmentStrength?.Value ?? 0.85f);
+        var directional = maxShift * strength;
+
+        return alignment switch
+        {
+            RepoKastimMod.InventoryAlignment.Left => -directional + fine,
+            RepoKastimMod.InventoryAlignment.Right => directional + fine,
+            _ => fine
+        };
+    }
+
+    private static float TryGetCanvasWidth(InventoryUI inventoryUi, float fallback)
+    {
+        if (inventoryUi == null)
+        {
+            return fallback;
+        }
+
+        var canvas = inventoryUi.GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            return fallback;
+        }
+
+        var rootCanvas = canvas.rootCanvas != null ? canvas.rootCanvas : canvas;
+        if (rootCanvas.transform is RectTransform rect)
+        {
+            var width = rect.rect.width;
+            return width > 1f ? width : fallback;
+        }
+
+        return fallback;
+    }
+
+    private static float TryGetCurrentSpacing(InventoryUI inventoryUi, float fallback)
+    {
+        if (inventoryUi == null)
+        {
+            return fallback;
+        }
+
+        try
+        {
+            var spots = inventoryUi.transform
+                .GetComponentsInChildren<InventorySpot>(true)
+                .Where(s => s.inventorySpotIndex >= 0 && s.inventorySpotIndex < 3)
+                .OrderBy(s => s.inventorySpotIndex)
+                .ToList();
+
+            if (spots.Count >= 2)
+            {
+                var spacing = Mathf.Abs(spots[1].transform.localPosition.x - spots[0].transform.localPosition.x);
+                if (spacing > 1f)
+                {
+                    return spacing;
+                }
+            }
+        }
+        catch
+        {
+            /* ignored */
+        }
+
+        return fallback;
     }
 
     private static void BuildSlots(InventoryUI inventoryUi, int slotCount)
@@ -249,15 +342,4 @@ internal static class InventoryUiBuilder
     }
 
     private static string GetSlotLabel(int index) => index == 9 ? "0" : (index + 1).ToString();
-
-    private static float GetAlignmentOffset(RepoKastimMod.InventoryAlignment alignment)
-    {
-        var magnitude = Plugin.InventoryAlignmentOffset?.Value ?? 350f;
-        return alignment switch
-        {
-            RepoKastimMod.InventoryAlignment.Left => -magnitude,
-            RepoKastimMod.InventoryAlignment.Right => magnitude,
-            _ => 0f
-        };
-    }
 }

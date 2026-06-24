@@ -31,8 +31,10 @@ R.E.P.O. için ekstra envanter slotları modu. Güncel R.E.P.O. sürümleri (v0.
 | Auto Swap Items | true | Dolu slotta swap yap |
 | Extra Slot Hotkeys | true | 4-9, 0 tuşları |
 | Numpad Hotkeys | true | Numpad tuşları |
-| Alignment | Center | Slot satırının ekrandaki yatay konumu: `Left`, `Center`, `Right` |
-| Alignment Offset | 350 | Sola/sağa kaydırma miktarı (UI birimi, 0–800) |
+| Alignment | Center | Slot satırının ekrandaki yatay konumu: `Left`, `Center`, `Right` (kanvas genişliğine göre otomatik) |
+| Alignment Strength | 0.85 | Left/Right modunda ekran kenarına ne kadar yaklaşılsın (0–1) |
+| Alignment Fine Offset | 0 | Manuel yatay ince ayar (-200 ile +200) |
+| Vertical Offset | 0 | Manuel dikey ince ayar (-200 ile +200) |
 
 ## Multiplayer
 

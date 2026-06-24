@@ -1,3 +1,11 @@
+# v1.4.3
+
+- Alignment now computes its shift from the actual canvas width and slot row width, so the row lands near the screen edge at any resolution (no more half-cut slots at Left/Right).
+- Replaced fixed `Alignment Offset` (in pixels) with two safer controls:
+  - `Alignment Strength` (0.0–1.0, default 0.85): how close to the edge Left/Right goes
+  - `Alignment Fine Offset` (-200 to +200): manual nudge in UI units
+- New `Vertical Offset` (-200 to +200): nudge the row up or down too.
+
 # v1.4.2
 
 - Fixed `Alignment` not visibly moving slots: SemiUI's per-frame `UpdatePositionLogic` was resetting the row to its baked-in anchor. The whole InventoryUI is now shifted (instead of individual spots) and SemiUI's internal anchor fields are patched so the new position becomes the idle anchor.

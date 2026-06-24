@@ -25,7 +25,9 @@ public sealed class Plugin : BaseUnityPlugin
     internal static ConfigEntry<bool> ExtraHotkeys { get; private set; }
     internal static ConfigEntry<bool> NumpadHotkeys { get; private set; }
     internal static ConfigEntry<InventoryAlignment> InventoryAlignment { get; private set; }
-    internal static ConfigEntry<float> InventoryAlignmentOffset { get; private set; }
+    internal static ConfigEntry<float> InventoryAlignmentStrength { get; private set; }
+    internal static ConfigEntry<float> InventoryAlignmentFineOffset { get; private set; }
+    internal static ConfigEntry<float> InventoryVerticalOffset { get; private set; }
 
     internal static int EffectiveSlotCount =>
         Mathf.Clamp(SlotCount?.Value ?? VanillaSlotCount, VanillaSlotCount, MaxSlotCount);
@@ -77,18 +79,36 @@ public sealed class Plugin : BaseUnityPlugin
             "Inventory",
             "Alignment",
             global::RepoKastimMod.InventoryAlignment.Center,
-            "Where the inventory slot row sits on screen: Left, Center or Right.");
+            "Where the inventory slot row sits on screen: Left, Center or Right. Position is auto-computed from canvas width so it works at any resolution.");
 
-        InventoryAlignmentOffset = Config.Bind(
+        InventoryAlignmentStrength = Config.Bind(
             "Inventory",
-            "Alignment Offset",
-            350f,
+            "Alignment Strength",
+            0.85f,
             new ConfigDescription(
-                "How far Left/Right alignment shifts the slots, in UI units. Ignored when alignment is Center.",
-                new AcceptableValueRange<float>(0f, 800f)));
+                "How close to the screen edge Left/Right alignment goes. 0 = no shift, 1 = touch the edge.",
+                new AcceptableValueRange<float>(0f, 1f)));
+
+        InventoryAlignmentFineOffset = Config.Bind(
+            "Inventory",
+            "Alignment Fine Offset",
+            0f,
+            new ConfigDescription(
+                "Extra horizontal shift in UI units on top of the auto-computed alignment. Negative = left, positive = right.",
+                new AcceptableValueRange<float>(-200f, 200f)));
+
+        InventoryVerticalOffset = Config.Bind(
+            "Inventory",
+            "Vertical Offset",
+            0f,
+            new ConfigDescription(
+                "Extra vertical shift in UI units. Negative = down, positive = up.",
+                new AcceptableValueRange<float>(-200f, 200f)));
 
         InventoryAlignment.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
-        InventoryAlignmentOffset.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
+        InventoryAlignmentStrength.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
+        InventoryAlignmentFineOffset.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
+        InventoryVerticalOffset.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
 
         _harmony = new Harmony(PluginInfo.Guid);
         _harmony.PatchAll();
@@ -127,7 +147,7 @@ internal static class PluginInfo
 {
     internal const string Guid = "kazhime.repokastimmod";
     internal const string Name = "Repo Kastim Mod";
-    internal const string Version = "1.4.2";
+    internal const string Version = "1.4.3";
 }
 
 public enum InventoryAlignment
