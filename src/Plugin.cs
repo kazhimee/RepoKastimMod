@@ -87,6 +87,9 @@ public sealed class Plugin : BaseUnityPlugin
                 "How far Left/Right alignment shifts the slots, in UI units. Ignored when alignment is Center.",
                 new AcceptableValueRange<float>(0f, 800f)));
 
+        InventoryAlignment.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
+        InventoryAlignmentOffset.SettingChanged += (_, _) => Slots.InventoryUiBuilder.ReapplyAlignment();
+
         _harmony = new Harmony(PluginInfo.Guid);
         _harmony.PatchAll();
 
@@ -124,7 +127,7 @@ internal static class PluginInfo
 {
     internal const string Guid = "kazhime.repokastimmod";
     internal const string Name = "Repo Kastim Mod";
-    internal const string Version = "1.4.1";
+    internal const string Version = "1.4.2";
 }
 
 public enum InventoryAlignment

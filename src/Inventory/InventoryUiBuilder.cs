@@ -16,6 +16,9 @@ internal static class InventoryUiBuilder
     private static readonly FieldInfo CurrentItemField = AccessTools.Field(typeof(InventorySpot), "<CurrentItem>k__BackingField");
     private static readonly FieldInfo StateStartField = AccessTools.Field(typeof(InventorySpot), "stateStart");
 
+    private static Vector3 _vanillaInventoryUiPosition;
+    private static bool _vanillaInventoryUiPositionCaptured;
+
     internal static void Rebuild(InventoryUI inventoryUi)
     {
         if (inventoryUi == null)
@@ -25,65 +28,13 @@ internal static class InventoryUiBuilder
 
         var slotCount = Plugin.EffectiveSlotCount;
         var alignment = Plugin.InventoryAlignment?.Value ?? RepoKastimMod.InventoryAlignment.Center;
-        var needsExtraSlots = slotCount > Plugin.VanillaSlotCount;
-        var needsRealignment = alignment != RepoKastimMod.InventoryAlignment.Center;
-        if (!needsExtraSlots && !needsRealignment)
-        {
-            return;
-        }
 
         try
         {
-            var root = inventoryUi.transform;
-            var existingSpots = root.GetComponentsInChildren<InventorySpot>(true)
-                .OrderBy(spot => spot.inventorySpotIndex)
-                .ThenBy(spot => spot.name)
-                .ToList();
+            CaptureVanillaInventoryUiPosition(inventoryUi);
 
-            var template = existingSpots.FirstOrDefault(spot => spot.inventorySpotIndex == 0) ?? existingSpots.FirstOrDefault();
-            if (template == null)
-            {
-                Plugin.Log.LogWarning("Could not find an InventorySpot template in InventoryUI.");
-                return;
-            }
-
-            var allChildren = AllChildrenField?.GetValue(inventoryUi) as List<GameObject>;
-            var spacing = CalculateSpacing(existingSpots);
-            var centerX = CalculateCenterX(existingSpots, template.transform.localPosition.x);
-            var alignmentOffset = GetAlignmentOffset(alignment);
-            var startX = centerX - spacing * (slotCount - 1) * 0.5f + alignmentOffset;
-            var y = template.transform.localPosition.y;
-            var z = template.transform.localPosition.z;
-
-            var iterations = Math.Max(slotCount, Plugin.VanillaSlotCount);
-            for (var i = 0; i < iterations; i++)
-            {
-                var spot = GetOrCreateSpot(root, template, existingSpots, i);
-                if (spot == null)
-                {
-                    continue;
-                }
-
-                if (i >= slotCount)
-                {
-                    // We only need to reposition existing vanilla slots when alignment forces it;
-                    // never create extras beyond the configured count.
-                    continue;
-                }
-
-                ConfigureSpot(spot, i, startX + spacing * i, y, z);
-
-                var spotObject = spot.gameObject;
-                if (allChildren != null && !allChildren.Contains(spotObject))
-                {
-                    allChildren.Add(spotObject);
-                }
-
-                if (i >= Plugin.VanillaSlotCount)
-                {
-                    SlotRegistry.Track(spot);
-                }
-            }
+            BuildSlots(inventoryUi, slotCount);
+            ApplyAlignment(inventoryUi, alignment);
 
             InventorySlotList.EnsureSlots(Inventory.instance, slotCount);
             SlotRegistry.EnsureRegistered(Inventory.instance);
@@ -91,6 +42,97 @@ internal static class InventoryUiBuilder
         catch (Exception ex)
         {
             Plugin.Log.LogWarning($"Failed to rebuild inventory slots: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Re-runs the alignment step against the current InventoryUI without rebuilding slots.
+    /// Used for live config updates.
+    /// </summary>
+    internal static void ReapplyAlignment()
+    {
+        if (InventoryUI.instance == null)
+        {
+            return;
+        }
+
+        try
+        {
+            CaptureVanillaInventoryUiPosition(InventoryUI.instance);
+            var alignment = Plugin.InventoryAlignment?.Value ?? RepoKastimMod.InventoryAlignment.Center;
+            ApplyAlignment(InventoryUI.instance, alignment);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"Failed to reapply inventory alignment: {ex.Message}");
+        }
+    }
+
+    private static void CaptureVanillaInventoryUiPosition(InventoryUI inventoryUi)
+    {
+        if (_vanillaInventoryUiPositionCaptured)
+        {
+            return;
+        }
+
+        _vanillaInventoryUiPosition = inventoryUi.transform.localPosition;
+        _vanillaInventoryUiPositionCaptured = true;
+    }
+
+    private static void ApplyAlignment(InventoryUI inventoryUi, RepoKastimMod.InventoryAlignment alignment)
+    {
+        var offset = GetAlignmentOffset(alignment);
+        var target = _vanillaInventoryUiPosition + new Vector3(offset, 0f, 0f);
+        SemiUiPositionPatcher.Reposition(inventoryUi, target);
+    }
+
+    private static void BuildSlots(InventoryUI inventoryUi, int slotCount)
+    {
+        if (slotCount <= Plugin.VanillaSlotCount)
+        {
+            return;
+        }
+
+        var root = inventoryUi.transform;
+        var existingSpots = root.GetComponentsInChildren<InventorySpot>(true)
+            .OrderBy(spot => spot.inventorySpotIndex)
+            .ThenBy(spot => spot.name)
+            .ToList();
+
+        var template = existingSpots.FirstOrDefault(spot => spot.inventorySpotIndex == 0) ?? existingSpots.FirstOrDefault();
+        if (template == null)
+        {
+            Plugin.Log.LogWarning("Could not find an InventorySpot template in InventoryUI.");
+            return;
+        }
+
+        var allChildren = AllChildrenField?.GetValue(inventoryUi) as List<GameObject>;
+        var spacing = CalculateSpacing(existingSpots);
+        var centerX = CalculateCenterX(existingSpots, template.transform.localPosition.x);
+        var startX = centerX - spacing * (slotCount - 1) * 0.5f;
+        var y = template.transform.localPosition.y;
+        var z = template.transform.localPosition.z;
+
+        for (var i = 0; i < slotCount; i++)
+        {
+            var spot = GetOrCreateSpot(root, template, existingSpots, i);
+            if (spot == null)
+            {
+                continue;
+            }
+
+            ConfigureSpot(spot, i, startX + spacing * i, y, z);
+
+            var spotObject = spot.gameObject;
+            if (allChildren != null && !allChildren.Contains(spotObject))
+            {
+                allChildren.Add(spotObject);
+            }
+
+            if (i >= Plugin.VanillaSlotCount)
+            {
+                SlotRegistry.Track(spot);
+            }
         }
     }
 
@@ -153,7 +195,7 @@ internal static class InventoryUiBuilder
     {
         spot.inventorySpotIndex = index;
         spot.name = $"Inventory Spot {index + 1}";
-        spot.transform.localPosition = new Vector3(x, y, z);
+        SemiUiPositionPatcher.Reposition(spot, new Vector3(x, y, z));
         spot.gameObject.SetActive(true);
         InventoryBatteryBinding.Bind(spot, activateForVanillaStart: false);
 

@@ -1,3 +1,9 @@
+# v1.4.2
+
+- Fixed `Alignment` not visibly moving slots: SemiUI's per-frame `UpdatePositionLogic` was resetting the row to its baked-in anchor. The whole InventoryUI is now shifted (instead of individual spots) and SemiUI's internal anchor fields are patched so the new position becomes the idle anchor.
+- Live updates: changing `Alignment` or `Alignment Offset` (in BepInEx config OR via REPOConfig in-game menu) reapplies immediately, no restart needed.
+- New dependencies: `MenuLib` and `REPOConfig` — these provide the in-game Mods menu that lets you change every Repo Kastim setting (alignment included) without leaving the game.
+
 # v1.4.1
 
 - New: `Alignment` config option (`Left`, `Center`, `Right`) shifts the inventory slot row horizontally on screen

@@ -1,9 +1,11 @@
 {
     "name": "RepoKastimMod",
-    "version_number": "1.4.1",
+    "version_number": "1.4.2",
     "website_url": "https://github.com/kazhimee/RepoKastimMod",
-    "description": "Extra inventory slots (3-10) for R.E.P.O. Works in singleplayer and multiplayer using vanilla matchmaking.",
+    "description": "Extra inventory slots (3-10) and a left/center/right alignment toggle for R.E.P.O. Works in singleplayer and multiplayer.",
     "dependencies": [
-        "BepInEx-BepInExPack-5.4.2100"
+        "BepInEx-BepInExPack-5.4.2100",
+        "nickklmao-MenuLib-2.5.4",
+        "nickklmao-REPOConfig-1.2.6"
     ]
 }

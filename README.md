@@ -15,8 +15,9 @@ R.E.P.O. için ekstra envanter slotları modu. Güncel R.E.P.O. sürümleri (v0.
 
 ## Kurulum
 
-1. [BepInEx](https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/) kurulu olmalı
+1. [BepInEx](https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/), [MenuLib](https://thunderstore.io/c/repo/p/nickklmao/MenuLib/) ve [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) kurulu olmalı (mod manager kullanırsan otomatik kurar)
 2. Zip'i açıp `RepoKastımMod` klasörünü `BepInEx/plugins/` altına kopyalayın
+3. Oyun içinde ana menüde **Mods** butonu → **Repo Kastim Mod** sekmesinden ayarlar değiştirilebilir (oyun içi, restart gerektirmez)
 
 ## Yapılandırma
 
